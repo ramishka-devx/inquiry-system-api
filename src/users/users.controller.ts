@@ -14,7 +14,6 @@ export class UsersController {
 
   // get user profile by user
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions('user.read')
   @Get('profile')
   getProfile(@GetUser('id') id: number) {
     return this.usersService.findOne(id);
