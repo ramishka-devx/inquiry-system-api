@@ -3,6 +3,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { MySQLService } from '../mysql/mysql.service';
 import { CreateComplainDto } from './dto/create-complain.dto';
 import { UpdateComplainDto } from './dto/update-complain.dto';
+import { activityComplainDto } from './dto/activity-complain.dto';
 
 @Injectable()
 export class ComplainsService {
@@ -92,15 +93,23 @@ async findAll(search: string, page: number, limit: number, user_id?: number): Pr
   // Get a complain by ID
   async findOne(id: number): Promise<any> {
     const complains = await this.mySqlService.query(
-      'SELECT complain_id as id, user_id, category_id, subject, description, priority, created_at FROM complains WHERE complain_id = ?',
+      'SELECT c.* , u.first_name, u.last_name, ctr.title as category FROM complains c JOIN users u ON u.user_id = c.user_id JOIN categories ctr ON ctr.category_id = c.category_id WHERE complain_id = ?',
       [id]
     );
 
+    
     if (complains.length === 0) {
       throw new NotFoundException(`Complain with ID ${id} not found`);
     }
 
-    return complains[0];
+    const activities = await this.mySqlService.query(
+      'SELECT * FROM activities WHERE complain_id = ?',
+      [id]
+    );
+
+    const complain = complains[0];
+    complain.activities = activities;
+    return complain;
   }
 
   // Update a complain
@@ -160,4 +169,42 @@ async findAll(search: string, page: number, limit: number, user_id?: number): Pr
       throw new NotFoundException(`Complain with ID ${id} not found`);
     }
   }
+
+  // ===========================================================
+  // secondary methods
+  // ===========================================================
+
+  // create activity on complain
+  async createActivity(id: number, complain_id: number, activityComplainDto: activityComplainDto): Promise<any> {
+    const complain = await this.findOne(complain_id);
+
+    if (!complain) {
+      throw new NotFoundException(`Complain with ID ${complain_id} not found`);
+    }
+
+    const isAuthorized = await this.mySqlService.query(
+      'SELECT * FROM category_incharge ci JOIN users u ON u.role_id = ci.role_id WHERE u.user_id = ? AND ci.category_id = ?',
+      [id, complain.category_id]
+    );
+    if (isAuthorized.length === 0) {
+      throw new ConflictException(`You are not authorized to create activity for this complain`);
+    }
+        
+    const result = await this.mySqlService.query(
+      `INSERT INTO activities (user_id, complain_id, description, status) 
+       VALUES (?, ?, ?, ?)`,
+      [
+        id,
+        complain_id,
+        activityComplainDto.description,
+        activityComplainDto.status
+      ]
+    );
+
+    return {
+      activity_id: result.insertId,
+      ...activityComplainDto,
+    };
+  }
+
 }

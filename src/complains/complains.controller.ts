@@ -7,6 +7,7 @@ import { GetUser } from '../common/decorators/get-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Permissions } from '../auth/decorators/permissions.decorator';
+import { activityComplainDto } from './dto/activity-complain.dto';
 
 @Controller('complains')
 export class ComplainsController {
@@ -36,7 +37,7 @@ export class ComplainsController {
 
   // Get a complain by ID
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions('complain.read')
+  // @Permissions('complain.read')
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.complainsService.findOne(id);
@@ -60,5 +61,11 @@ export class ComplainsController {
   // secondary methods
   // ======================================================
 
-
+  // create activity on complain
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions('complain.activity.create')
+  @Post(':id/activity')
+  createActivity(@GetUser('id') id: number, @Param('id') complain_id: number, @Body() activityComplainDto: activityComplainDto) {
+    return this.complainsService.createActivity(id, complain_id, activityComplainDto);
+  } 
 }
