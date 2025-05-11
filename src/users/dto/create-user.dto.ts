@@ -23,6 +23,6 @@ export class CreateUserDto {
   @IsInt()
   role_id: number;
 
-  @IsInt()
+  @IsOptional()
   factory_id: number;
 }
