@@ -29,19 +29,17 @@ export class UsersService {
 
     // Create user in database
     const result = await this.mySqlService.query(
-      `INSERT INTO users (first_name, last_name, email, password_hash, phone, role_id, factory_id) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO users (first_name, last_name, email, password_hash, phone, role_id) 
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         createUserDto.first_name,
         createUserDto.last_name,
         createUserDto.email,
         hashedPassword,
         createUserDto.phone,
-        createUserDto.role_id,
-        createUserDto.factory_id
+        createUserDto.role_id
       ]
     );
-
 
     // Return user object excluding the password
     const newUser = {
