@@ -29,15 +29,14 @@ export class UsersService {
 
     // Create user in database
     const result = await this.mySqlService.query(
-      `INSERT INTO users (first_name, last_name, email, password_hash, phone, role_id) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO users (first_name, last_name, email, password_hash, phone) 
+       VALUES (?, ?, ?, ?, ?)`,
       [
         createUserDto.first_name,
         createUserDto.last_name,
         createUserDto.email,
         hashedPassword,
         createUserDto.phone,
-        createUserDto.role_id
       ]
     );
 
@@ -125,7 +124,7 @@ export class UsersService {
   }
 
   // Find a user by username
-  async findByEmail(email: string): Promise<User> {
+  async findByEmail(email: string): Promise<User & {role_id: number}> {
     const users = await this.mySqlService.query(
       'SELECT *, password_hash as password, user_id as id FROM users WHERE email = ? LIMIT 1',
       [email]

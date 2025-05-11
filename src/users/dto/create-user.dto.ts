@@ -20,9 +20,4 @@ export class CreateUserDto {
   @IsNotEmpty()
   phone?: string;
 
-  @IsInt()
-  role_id: number;
-
-  @IsOptional()
-  factory_id: number;
 }
